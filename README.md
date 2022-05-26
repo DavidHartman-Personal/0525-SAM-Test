@@ -1,4 +1,4 @@
-# 0525-SAM-Test
+# AWS Severless Lambda Function Template
 
 This project contains source code and supporting files for a serverless application that you can deploy with the SAM CLI. It includes the following files and folders.
 
@@ -20,14 +20,56 @@ The AWS Toolkit is an open source plug-in for popular IDEs that uses the SAM CLI
 
 The Serverless Application Model Command Line Interface (SAM CLI) is an extension of the AWS CLI that adds functionality for building and testing Lambda applications. It uses Docker to run your functions in an Amazon Linux environment that matches Lambda. It can also emulate your application's build environment and API.
 
-To build and deploy your application for the first time, run the following in your shell:
+Prior to running the commands noted below, define/export some environment variables.  This assumes that WSL/Unix is 
+being used.
+
+```bash
+root_dir="/mnt/c/Users/david/PycharmProjects/0525-SAM-Test/"
+AWS_PROFILE="dave-personal"
+date_time=$(date +'%Y_%m_%d_%H_%M_%S')
+logs_dir=${root_dir}/logs
+output_dir=${root_dir}/output
+log_suffix="0525-SAM-Test"  # this is a default log file suffix.  Change as needed.
+log_file="${logs_dir}/${log_suffix}_${date_time}.log"
+# sam variables
+stack_name="sam-app-hello-world-test-05252022"
+stack_logical_resource_id="HelloWorldFunction"
+```
+
+HOLD OFF ON THIS FOR NOW
+The SAM config file that can be used instead of using the --guided option can be created as 
+
+```bash
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "sam-app-hello-world-test-05252022"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-wpu24m6n1w3q"
+s3_prefix = "sam-app-hello-world-test-05252022"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM"
+```
+HOLD OFF ON THIS FOR NOW END
+
+Note that the sam build can be run without the container if the installed venv/ is the same vesrion as needed for 
+the functions.
+
+To build and deploy your application for the first time, run the following in your shell
 
 ```bash
 sam build --use-container
 sam deploy --guided
+
+# or
+sam build
+sam deploy
 ```
 
-The first command will build the source of your application. The second command will package and deploy your application to AWS, with a series of prompts:
+The first command will build the source of your application. By using --use-container, a Docker image is downloaded 
+and started to create the deployment package.
+
+The second command will package and deploy your application to AWS, with a series of prompts:
 
 * **Stack Name**: The name of the stack to deploy to CloudFormation. This should be unique to your account and region, and a good starting point would be something matching your project name.
 * **AWS Region**: The AWS region you want to deploy your app to.
@@ -35,8 +77,35 @@ The first command will build the source of your application. The second command 
 * **Allow SAM CLI IAM role creation**: Many AWS SAM templates, including this example, create AWS IAM roles required for the AWS Lambda function(s) included to access AWS services. By default, these are scoped down to minimum required permissions. To deploy an AWS CloudFormation stack which creates or modifies IAM roles, the `CAPABILITY_IAM` value for `capabilities` must be provided. If permission isn't provided through this prompt, to deploy this example you must explicitly pass `--capabilities CAPABILITY_IAM` to the `sam deploy` command.
 * **Save arguments to samconfig.toml**: If set to yes, your choices will be saved to a configuration file inside the project, so that in the future you can just re-run `sam deploy` without parameters to deploy changes to your application.
 
-You can find your API Gateway Endpoint URL in the output values displayed after deployment.
+The outputs from this example include the Lambda Function ARN.
 
+To get the Lambda Function resource ID, run the following:
+
+```bash
+physical_resource_id=$(aws cloudformation describe-stack-resource \
+                      --stack-name=${stack_name} \
+                      --logical-resource-id=${stack_logical_resource_id} \
+                      --query "StackResourceDetail.PhysicalResourceId" \
+                      --output text)
+echo "$physical_resourc_id"                    
+```
+
+To test the newly deployed Lambda Function run the following:
+
+```bash
+log_suffix="aws-lambda-invoke-test"
+log_file="${logs_dir}/${log_suffix}_$(date +'%Y_%m_%d_%H_%M_%S').log"
+aws lambda invoke --function-name ${physical_resource_id} \
+                  --log-type Tail \
+                  --cli-binary-format raw-in-base64-out \
+                  --payload file://events/event.json \
+                  --output text \
+                  --query "LogResult" \
+                  ${log_file} |  base64 -d
+echo "*** Results: ${log_file} ****"
+cat ${log_file}
+echo "*** End of Results ****"
+```
 ## Use the SAM CLI to build and test locally
 
 Build your application with the `sam build --use-container` command.
