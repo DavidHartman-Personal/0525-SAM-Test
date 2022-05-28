@@ -24,15 +24,17 @@ Prior to running the commands noted below, define/export some environment variab
 being used.
 
 ```bash
-root_dir="/mnt/c/Users/david/PycharmProjects/0525-SAM-Test/"
+# open a terminal at the folder root and set these environment variables.
+root_dir="$(pwd)"
+# root_dir="/mnt/c/Users/david/PycharmProjects/AWS-SAM-Example"
 AWS_PROFILE="dave-personal"
-date_time=$(date +'%Y_%m_%d_%H_%M_%S')
+# date_time=$(date +'%Y_%m_%d_%H_%M_%S')
 logs_dir=${root_dir}/logs
 output_dir=${root_dir}/output
-log_suffix="0525-SAM-Test"  # this is a default log file suffix.  Change as needed.
-log_file="${logs_dir}/${log_suffix}_${date_time}.log"
+log_suffix="0528-SAM-Test"  # this is a default log file suffix.  Change as needed.
+# log_file="${logs_dir}/${log_suffix}_${date_time}.log"
 # sam variables
-stack_name="sam-app-hello-world-test-05252022"
+stack_name="sam-app-hello-world-test-05282022"
 stack_logical_resource_id="HelloWorldFunction"
 ```
 
@@ -63,7 +65,7 @@ sam deploy --guided
 
 # or
 sam build
-sam deploy
+sam deploy --guided
 ```
 
 The first command will build the source of your application. By using --use-container, a Docker image is downloaded 
@@ -87,7 +89,7 @@ physical_resource_id=$(aws cloudformation describe-stack-resource \
                       --logical-resource-id=${stack_logical_resource_id} \
                       --query "StackResourceDetail.PhysicalResourceId" \
                       --output text)
-echo "$physical_resourc_id"                    
+echo "$physical_resource_id"                    
 ```
 
 To test the newly deployed Lambda Function run the following:
@@ -107,12 +109,6 @@ cat ${log_file}
 echo "*** End of Results ****"
 ```
 ## Use the SAM CLI to build and test locally
-
-Build your application with the `sam build --use-container` command.
-
-```bash
-0525-SAM-Test$ sam build --use-container
-```
 
 The SAM CLI installs dependencies defined in `hello_world/requirements.txt`, creates a deployment package, and saves it in the `.aws-sam/build` folder.
 
@@ -188,11 +184,6 @@ To confirm the status of the stack run the following:
 aws cloudformation list-stacks \
                     --query "StackSummaries[?StackName=='${stack_name}'].[StackName,StackStatus, CreationTime, 
                     LastUpdatedTime, DeletionTime]"
-```
-
-```bash
-aws cloudformation list-stacks \
-                    --query "StackSummaries[?StackName=='${stack_name}']"
 ```
 
 ## Resources
