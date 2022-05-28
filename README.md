@@ -172,10 +172,27 @@ Tests are defined in the `tests` folder in this project. Use PIP to install the 
 
 ## Cleanup
 
-To delete the sample application that you created, use the AWS CLI. Assuming you used your project name for the stack name, you can run the following:
+To delete the sample application that you created, use the AWS CLI.
+
+Assuming you used your project name for the stack name, you can run the following:
+
+Note that this command does not provide any details regarding the status of the delete.  
 
 ```bash
-aws cloudformation delete-stack --stack-name 0525-SAM-Test
+aws cloudformation delete-stack \
+                    --stack-name ${stack_name}                    
+```
+
+To confirm the status of the stack run the following:
+```bash
+aws cloudformation list-stacks \
+                    --query "StackSummaries[?StackName=='${stack_name}'].[StackName,StackStatus, CreationTime, 
+                    LastUpdatedTime, DeletionTime]"
+```
+
+```bash
+aws cloudformation list-stacks \
+                    --query "StackSummaries[?StackName=='${stack_name}']"
 ```
 
 ## Resources
